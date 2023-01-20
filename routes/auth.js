@@ -1,16 +1,16 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const env = require("dotenv");
 const { body, validationResult } = require("express-validator");
 
 const fetchuser = require("../middleware/fetchuser");
 const User = require("../models/User");
 
+env.config();
 const router = express.Router();
 
-const JWT_SECRET = "Jimmyisagoodb$oy";
-
-// Create a user using POST: "/api/auth/createuser"
+// Create a user using POST: "/api/auth/signup"
 router.post(
   "/signup",
   [
@@ -21,19 +21,21 @@ router.post(
     }),
   ],
   async (req, res) => {
-    // If error occurs throw the error with bad request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     try {
+      success = false;
+      // If error occurs throw the error with bad request
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success, errors: errors.array() });
+      }
+
       // Check whether the user exist already
       let user = await User.findOne({ email: req.body.email });
       if (user) {
-        return res
-          .status(400)
-          .json({ error: "Sorry, user with this email already exists" });
+        return res.status(400).json({
+          success,
+          error: "Sorry, user with this email already exists",
+        });
       }
 
       // ceating password hash
@@ -53,10 +55,10 @@ router.post(
           id: user.id,
         },
       };
-      const authToken = jwt.sign(data, JWT_SECRET);
+      const authToken = jwt.sign(data, process.env.JWT_KEY);
 
-      res.json({ authToken });
-      //   res.json(user);
+      success = true;
+      res.json({ success, authToken });
     } catch (error) {
       console.error(error.message);
       res.status(500).send("Some error occurred");
@@ -101,7 +103,7 @@ router.post(
           id: user.id,
         },
       };
-      const authToken = jwt.sign(data, JWT_SECRET);
+      const authToken = jwt.sign(data, process.env.JWT_KEY);
 
       success = true;
       res.json({ success, authToken });

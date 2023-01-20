@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const env = require("dotenv");
 
-const JWT_SECRET = "Jimmyisagoodb$oy";
+env.config();
 
 const fetchuser = (req, res, next) => {
   // Get the user from the JWT Token and add id to req object
@@ -9,7 +10,7 @@ const fetchuser = (req, res, next) => {
     res.status(401).send({ error: "Access Denied" });
   }
   try {
-    const data = jwt.verify(token, JWT_SECRET);
+    const data = jwt.verify(token, process.env.JWT_KEY);
     req.user = data.user;
     next();
   } catch (error) {
